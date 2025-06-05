@@ -1,0 +1,32 @@
+name: Fetch Stock Data
+
+on:
+  schedule:
+    # 台股：台灣時間 14:00 → UTC 06:00，週一～週五
+    - cron: '0 6 * * 1-5'
+    # 美股：台灣時間 05:00 → UTC 21:00 前一日，週一～週五
+    - cron: '0 21 * * 0-4'
+  workflow_dispatch:
+
+jobs:
+  fetch-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.10
+
+      - name: Install dependencies
+        run: pip install yfinance beautifulsoup4 requests
+
+      - name: Fetch TW stock (Mon–Fri 14:00)
+        if: ${{ github.event.schedule == '0 6 * * 1-5' }}
+        run: python fetch_tw_stock.py
+
+      - name: Fetch US stock (Tue–Sat 05:00)
+        if: ${{ github.event.schedule == '0 21 * * 0-4' }}
+        run: python fetch_us_stock.py
